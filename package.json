@@ -1,0 +1,26 @@
+{
+  "name": "swifttrade-backend",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node --watch index.js",
+    "start": "node index.js",
+    "test": "node --test tests/*.test.mjs",
+    "db:migrate": "node scripts/migrate.mjs",
+    "storage:setup": "node scripts/storage-setup.mjs",
+    "test:e2e": "node scripts/test-account.mjs"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.116.0",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "express-rate-limit": "^8.7.0",
+    "helmet": "^8.3.0",
+    "pg": "^8.23.0",
+    "zod": "^4.6.2"
+  },
+  "devDependencies": {
+    "node": "^24.21.0"
+  }
+}
