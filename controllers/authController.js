@@ -49,7 +49,7 @@ export async function logout(req,res){
  clearSession(res);res.json({ok:true});
 }
 export async function forgotPassword(req,res){
- const body=z.object({email:z.email().max(254)}).safeParse(req.body);
+ const body=z.object({email:z.string().trim().toLowerCase().email().max(254)}).strict().safeParse(req.body);
  if(!body.success)return res.status(400).json({error:'Enter a valid email.'});
  try{emailConfig();origin();}catch{return res.status(503).json({error:'Account email delivery is not configured. Contact the site operator.'});}
  if(!admin)return res.status(503).json({error:'Account service is not configured.'});

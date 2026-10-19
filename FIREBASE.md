@@ -10,7 +10,7 @@ The API uses Firebase Authentication and Cloud Firestore in project zabuni-985c6
 - FIREBASE_API_KEY (web project API key)
 - FIREBASE_STORAGE_BUCKET
 
-The original service account JSON was removed after Authentication and Firestore access succeeded with the environment credentials. No credentials belong in frontend VITE variables except the public Firebase web configuration.
+The original service account JSON was removed after Authentication and Firestore access succeeded with the environment credentials. All Firebase configuration stays in the backend environment. The frontend contains no Firebase SDK or Firebase environment variables and uses the authenticated HTTP API only.
 
 Run `npm run firebase:init` once to create missing currencies, payment provider records and disabled-by-default referral settings. It preserves existing documents. Run `npm run firebase:check` for read-only connectivity. Run `npm test` for local regression tests. `node scripts/test-firebase.mjs` creates a disposable account and profile, verifies single-use email links, login, account APIs, admin authorization and zero-balance currency wallet creation, then removes the test records. It does not send mail.
 
@@ -20,7 +20,7 @@ Deposit credit, commissions, withdrawal reservations, unique request keys, recei
 
 The M-Pesa services import the backend's shared Firebase gateway. Deploy the repository layout together, install backend dependencies, and supply the same Firebase server environment. A standalone deployment of only a payment subdirectory is not supported by this layout. Existing signed callback authorization and independent STK queries remain required.
 
-Deploy firestore.rules to deny direct browser access to all collections. Financial and account data must be accessed through authenticated API endpoints. The web SDK module is optional; the application keeps authentication in HTTP-only cookies. Public frontend assets are served by frontend hosting; storage:setup no longer uploads assets. Private uploads need a separate Storage integration.
+Deploy firestore.rules to deny direct browser access to all collections. Financial and account data must be accessed through authenticated API endpoints. The frontend has no Firebase SDK module; the application keeps authentication in HTTP-only cookies. Public frontend assets are served by frontend hosting; storage:setup no longer uploads assets. Private uploads need a separate Storage integration.
 
 Crypto deposits and real broker trading remain disabled pending provider integration. The configured settlement address is TRON, not BTC; a wallet address alone cannot verify deposits or settle trades.
 

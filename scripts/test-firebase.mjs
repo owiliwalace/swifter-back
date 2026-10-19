@@ -29,9 +29,30 @@ try{
  response=await request('/wallets');const wallet=await response.json();assert.equal(wallet.wallets.find(row=>row.currency==='BTC').balance,'0');
  response=await request('/auth/login',{email,password});assert.equal(response.status,200,'Verified account password login');
  cookie=response.headers.getSetCookie().map(value=>value.split(';')[0]).join('; ');
- const recovery=await admin.auth.admin.generateLink({type:'recovery',email});
- if(recovery.error)throw new Error('Recovery setup failed');
- const recoveryToken=recovery.data.properties.hashed_token;
+ // Exercise forgot-password without delivering mail to a disposable address.
+ const originalFetch=globalThis.fetch;
+ let delivered;
+ globalThis.fetch=async(url,options)=>{
+  if(String(url)==='https://api.emailjs.com/api/v1.0/email/send'){
+   delivered=JSON.parse(options.body).template_params;
+   return new Response('OK',{status:200});
+  }
+  return originalFetch(url,options);
+ };
+ let recoveryToken;
+ try{
+  response=await request('/auth/forgot-password',{email:'  '+email.toUpperCase()+'  '});
+  assert.equal(response.status,200,'Forgot password accepts normalized email');
+  assert.equal(delivered?.to_email,email,'Recovery email targets the account');
+  const link=new URL(delivered.action_url);
+  assert.equal(new URLSearchParams(link.hash.slice(1)).get('type'),'recovery');
+  recoveryToken=new URLSearchParams(link.hash.slice(1)).get('token_hash');
+  assert.ok(recoveryToken,'Forgot password generated a recovery token');
+  delivered=null;
+  response=await request('/auth/forgot-password',{email:'missing-'+randomUUID()+'@example.com'});
+  assert.equal(response.status,200,'Missing account receives generic confirmation');
+  assert.equal(delivered,null,'No message for a nonexistent account');
+ }finally{globalThis.fetch=originalFetch;}
  try{
   response=await request('/auth/verify-email',{type:'signup',token_hash:recoveryToken});assert.equal(response.status,400,'Recovery token cannot confirm signup');
   response=await request('/auth/verify-email',{type:'recovery',token_hash:recoveryToken});assert.equal(response.status,200,'Recovery token verification');
