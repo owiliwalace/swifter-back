@@ -11,7 +11,7 @@ export async function login(req,res){
  const body=credentials.safeParse(req.body);if(!body.success)return res.status(400).json({error:'Enter a valid email and password.'});
  const {data,error}=await authClient().auth.signInWithPassword(body.data);
  if(error||!data.session)return res.status(401).json({error:'Incorrect credentials or unconfirmed account.'});
- setSession(res,data.session);res.json({authenticated:true});
+ setSession(res,data.session);res.json({authenticated:true,redirect_to:data.user?.app_metadata?.role==='admin'?'/admin':'/trade'});
 }
 export async function signup(req,res){
  const body=credentials.extend({full_name:z.string().trim().min(1).max(120),country:z.string().max(4).optional(),phone:z.string().max(30).optional(),referral_code:z.string().max(80).optional(),agreed:z.literal(true)}).strict().safeParse(req.body);
