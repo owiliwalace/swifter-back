@@ -1,6 +1,6 @@
 import {admin} from '../config/database.js';
 import {adminCreateUserSchema,adminProfileSchema,catalogSchema} from '../validators/admin.js';
-import {sendAuthEmail,smtpConfig} from '../services/authMail.js';
+import {sendAuthEmail,emailConfig} from '../services/authMail.js';
 import {frontendOrigin} from '../config/frontend.js';
 const uuid=value=>/^[0-9a-f]{8}-[0-9a-f-]{27}$/i.test(value||'');
 async function audit(actor,action,target){
@@ -10,12 +10,12 @@ async function audit(actor,action,target){
 async function done(id,error){await admin.from('audit_logs').update({action:error?'admin.crud.failed':'admin.crud.completed'}).eq('id',id);}
 export async function createUser(req,res){
  const body=adminCreateUserSchema.safeParse(req.body);if(!body.success)return res.status(400).json({error:'Enter a name, valid email and password of at least 8 characters.'});
- try{smtpConfig();frontendOrigin();}catch{return res.status(503).json({error:'Configure account email delivery before creating users.'});}
+ try{emailConfig();frontendOrigin();}catch{return res.status(503).json({error:'Configure account email delivery before creating users.'});}
  const event=await audit(req.user.id,'admin.user.create.requested',body.data.email);
  const {email,password,full_name}=body.data;
  const {data,error}=await admin.auth.admin.createUser({email,password,email_confirm:false,user_metadata:{full_name}});
  await done(event,error);if(error)return res.status(409).json({error:'Account could not be created. Check whether that email already exists.'});
- let warning;try{const link=await admin.auth.admin.generateLink({type:'magiclink',email,options:{redirectTo:frontendOrigin()+'/verify-email'}});if(link.error)throw new Error('Link generation failed');await sendAuthEmail({type:'magiclink',email,token:link.data.properties.hashed_token});}catch{warning='Account created, but confirmation email failed. Fix SMTP and resend confirmation before the user can sign in.';}
+ let warning;try{const link=await admin.auth.admin.generateLink({type:'magiclink',email,options:{redirectTo:frontendOrigin()+'/verify-email'}});if(link.error)throw new Error('Link generation failed');await sendAuthEmail({type:'magiclink',email,token:link.data.properties.hashed_token});}catch{warning='Account created, but confirmation email failed. Fix EmailJS settings and resend confirmation before the user can sign in.';}
  res.status(201).json({ok:true,id:data.user.id,warning});
 }
 export async function updateProfile(req,res){
@@ -32,7 +32,7 @@ export async function resendConfirmation(req,res){
  const {data,error}=await admin.auth.admin.generateLink({type:'magiclink',email:account.data.user.email});
  if(error){await done(event,error);return res.status(503).json({error:'Confirmation link could not be generated.'});}
  try{await sendAuthEmail({type:'magiclink',email:account.data.user.email,token:data.properties.hashed_token});await done(event);res.json({ok:true});}
- catch{await done(event,true);res.status(503).json({error:'Confirmation email delivery failed. Check SMTP.'});}
+ catch{await done(event,true);res.status(503).json({error:'Confirmation email delivery failed. Check EmailJS settings.'});}
 }
 export async function deleteUser(req,res){
  const id=req.params.id;if(!uuid(id)||id===req.user.id)return res.status(400).json({error:'You cannot delete your own account.'});

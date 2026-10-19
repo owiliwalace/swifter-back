@@ -3,7 +3,7 @@ import {admin} from '../config/database.js';
 import {requireUser} from '../middlewares/auth.js';
 import {requireAdmin} from '../middlewares/admin.js';
 import {adminActionSchema} from '../validators/admin.js';
-import {smtpConfig} from '../services/authMail.js';
+import {emailConfig} from '../services/authMail.js';
 import {createUser,updateProfile,resendConfirmation,deleteUser,saveMarket,deleteMarket} from '../controllers/adminCrudController.js';
 import {getFinanceSettings,setFinanceSettings,setInfluencer,reviewWithdrawal,reconcileDeposit} from '../controllers/financeController.js';
 const resources = {
@@ -70,9 +70,9 @@ adminRoutes.get('/users/:id',async(req,res)=>{
  res.json({user:{id:user.id,email:user.email,email_confirmed:!!user.email_confirmed_at,role:user.app_metadata?.role||'user',suspended:Date.parse(user.banned_until)>Date.now(),last_sign_in_at:user.last_sign_in_at,created_at:user.created_at},profile:results[0].data,deposits:results[1].data||[],withdrawals:results[2].data||[],influencer:results[3].data,unavailable:results.flatMap((result,i)=>result.error?[['profile','deposits','withdrawals','influencer'][i]]:[])});
 });
 adminRoutes.get('/system',async(_req,res)=>{
- let smtp=false;try{smtpConfig();smtp=true;}catch{/* Report configuration only, not credentials. */}
+ let emailReady=false;try{emailConfig();emailReady=true;}catch{/* Report configuration only, not credentials. */}
  const finance=await admin.from('referral_settings').select('enabled,rate,min_withdrawal').eq('id',true).maybeSingle();
- res.json({services:[{name:'Accounts',status:'Firebase Authentication connected'},{name:'Referral finance',status:finance.error?'Firestore unavailable':finance.data?.enabled?'Enabled':'Configured; program paused'},{name:'Account email',status:smtp?'SMTP configured; delivery must be verified':'SMTP settings incomplete'},{name:'Market scanner',status:'Deriv public market data; availability checked on each scan'},{name:'Trade execution',status:'Broker account authorization not connected'},{name:'Crypto payments',status:'Provider integration required'},{name:'Withdrawals',status:'Manual payout review'}]});
+ res.json({services:[{name:'Accounts',status:'Firebase Authentication connected'},{name:'Referral finance',status:finance.error?'Firestore unavailable':finance.data?.enabled?'Enabled':'Configured; program paused'},{name:'Account email',status:emailReady?'EmailJS configured; delivery must be verified':'EmailJS settings incomplete'},{name:'Market scanner',status:'Deriv public market data; availability checked on each scan'},{name:'Trade execution',status:'Broker account authorization not connected'},{name:'Crypto payments',status:'Provider integration required'},{name:'Withdrawals',status:'Manual payout review'}]});
 });
 adminRoutes.post('/actions/:id',async(req,res)=>{
  const parsed=adminActionSchema.safeParse(req.body);

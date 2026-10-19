@@ -1,22 +1,38 @@
-# Account email
+# EmailJS account email
 
-Configure only these four email settings in backend/.env:
+Email delivery uses the EmailJS REST API over HTTPS. SMTP ports are no longer used. Firebase verification and recovery tokens are generated and checked only on the backend.
+
+Set these variables in backend/.env and Render Environment (never in frontend VITE variables):
 
 ```dotenv
-SMTP_HOST=mail.swifttrade.co.ke
-SMTP_PORT=465
-SMTP_USER=noreply@swifttrade.co.ke
-SMTP_PASS="your mailbox password"
+EMAILJS_SERVICE_ID=service_icpioig
+EMAILJS_TEMPLATE_ID=template_zepk0b9
+EMAILJS_PUBLIC_KEY=your_public_key
+EMAILJS_PRIVATE_KEY=your_private_key
 ```
 
-SMTP_USER is also the sender address. Port 465 automatically uses SSL/TLS; port 587 automatically uses STARTTLS. Keep the existing mailbox password in the server environment; never put it in frontend variables or chat. Restart the backend after changing .env.
+In EmailJS Account > Security, enable API requests from non-browser applications and configure private-key protection. This integration requires the private key for server requests. Select the connected sender account in the EmailJS service/template dashboard; no SMTP username/password is needed by this backend.
 
-Test from the backend directory:
+Configure template template_zepk0b9:
+
+- To Email: {{to_email}}
+- Subject: {{subject}}
+- From Name: SwiftTrade
+- From Email: the connected service's verified sender/default address
+- Content: replace the template body using the HTML/code editor with the entire contents of emailjs-template.html. Save the template. The design uses existing backend variables, so no backend changes are needed for this template replacement.
+
+The backend supplies to_email, subject, message, action_url, action_text, app_name and email_type. Keep these names exact. One template handles signup, admin invitations, password recovery and diagnostic tests. Verification links include a fragment containing the one-use token; preserve the complete URL and turn off link tracking if it changes those links.
+
+Test after adding keys:
 
 ```sh
-node scripts/test-smtp.mjs owiliwalace@gmail.com
+npm run email:test -- owiliwalace@gmail.com
 ```
 
-A timeout means the server did not respond; check the hostname, network access and mail server firewall. An authentication failure means the mailbox username/password needs checking. Simplifying these settings does not fix an unreachable SMTP server. The previous connection attempt timed out before authentication, although sending from webmail worked.
+The older node scripts/test-smtp.mjs recipient@example.com command is a compatibility alias for EmailJS; --connect-ip no longer applies. No public test-mail endpoint was added. On Render without Shell, test using the normal signup/recovery flow and inspect logs/EmailJS email history.
 
-Firebase manages accounts. The server sends single-use confirmation and recovery links through this SMTP connection. FRONTEND_URL separately controls the website linked in those emails.
+Service ID and template ID alone cannot send email. Restart the local backend or redeploy Render after saving the keys. The service check validates configuration only; an accepted API response does not confirm inbox delivery. Provider error bodies, keys, addresses and verification tokens are not written to server logs.
+
+Sending is serialized per backend process to respect EmailJS's one-request-per-second API limit. Multiple backend instances sharing one EmailJS account need a shared limiter; avoid automatic retries after uncertain delivery.
+
+References: https://www.emailjs.com/docs/rest-api/send/ and https://github.com/emailjs-com/emailjs-nodejs

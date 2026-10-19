@@ -17,7 +17,8 @@
     "storage:setup": "node scripts/storage-setup.mjs",
     "test:e2e": "node scripts/test-account.mjs",
     "firebase:check": "node scripts/check-firebase.mjs",
-    "firebase:init": "node scripts/migrate.mjs"
+    "firebase:init": "node scripts/migrate.mjs",
+    "email:test": "node scripts/test-email.mjs"
   },
   "dependencies": {
     "@nowpaymentsio/nowpayments-sdk-nodejs": "^0.3.0",
@@ -28,7 +29,6 @@
     "firebase-admin": "^14.5.0",
     "helmet": "^8.3.0",
     "mysql2": "^3.24.4",
-    "nodemailer": "^10.0.10",
     "pg": "^8.23.0",
     "zod": "^4.6.2"
   },

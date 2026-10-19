@@ -4,7 +4,7 @@ import {admin} from '../config/database.js';
 import {setSession,clearSession,readCookie} from '../middlewares/session.js';
 import {signupFailure} from '../services/signupErrors.js';
 import {frontendOrigin} from '../config/frontend.js';
-import {smtpConfig,sendAuthEmail} from '../services/authMail.js';
+import {emailConfig,sendAuthEmail} from '../services/authMail.js';
 const credentials=z.object({email:z.email().max(254),password:z.string().min(8).max(128)});
 const origin=()=>frontendOrigin();
 export async function login(req,res){
@@ -24,7 +24,7 @@ export async function signup(req,res){
   if(lookup.error)return res.status(503).json({error:'Referral validation is temporarily unavailable.'});
   if(!lookup.data)return res.status(400).json({error:'This referral code is not active.'});
  }
- try{smtpConfig();origin();}catch{return res.status(503).json({error:'Account email delivery is not configured. Contact the site operator.'});}
+ try{emailConfig();origin();}catch{return res.status(503).json({error:'Account email delivery is not configured. Contact the site operator.'});}
  if(!admin)return res.status(503).json({error:'Account service is not configured.'});
  const {data,error}=await admin.auth.admin.generateLink({type:'signup',email,password,options:{data:metadata,redirectTo:origin()+'/verify-email'}});
  if(error){
@@ -51,7 +51,7 @@ export async function logout(req,res){
 export async function forgotPassword(req,res){
  const body=z.object({email:z.email().max(254)}).safeParse(req.body);
  if(!body.success)return res.status(400).json({error:'Enter a valid email.'});
- try{smtpConfig();origin();}catch{return res.status(503).json({error:'Account email delivery is not configured. Contact the site operator.'});}
+ try{emailConfig();origin();}catch{return res.status(503).json({error:'Account email delivery is not configured. Contact the site operator.'});}
  if(!admin)return res.status(503).json({error:'Account service is not configured.'});
  const {data,error}=await admin.auth.admin.generateLink({type:'recovery',email:body.data.email,options:{redirectTo:origin()+'/verify-email'}});
  if(error&&error.code!=='user_not_found')return res.status(503).json({error:'Password recovery is temporarily unavailable.'});

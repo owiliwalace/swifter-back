@@ -6,7 +6,7 @@ export function signupFailure(error){
   signup_disabled:[503,'New account registration is currently disabled.'],
   over_email_send_rate_limit:[429,'Too many confirmation emails have been requested. Check your inbox and wait before trying again.'],
   over_request_rate_limit:[429,'Too many account requests. Please wait before trying again.'],
-  email_address_not_authorized:[503,'Confirmation email delivery is not configured for this address. The operator needs to check SMTP settings.'],
+  email_address_not_authorized:[503,'Confirmation email delivery is not configured for this address. The operator needs to check EmailJS settings.'],
   email_address_invalid:[400,'Enter a valid email address.']
  };
  const known=Object.hasOwn(messages,error?.code||'');
