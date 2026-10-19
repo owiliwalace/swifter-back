@@ -14,8 +14,8 @@ export async function login(req,res){
  setSession(res,data.session);res.json({authenticated:true,redirect_to:data.user?.app_metadata?.role==='admin'?'/admin':'/trade'});
 }
 export async function signup(req,res){
- const body=credentials.extend({full_name:z.string().trim().min(1).max(120),country:z.string().max(4).optional(),phone:z.string().max(30).optional(),referral_code:z.string().max(80).optional(),agreed:z.literal(true)}).strict().safeParse(req.body);
- if(!body.success)return res.status(400).json({error:'Check your details, password length and terms acceptance.'});
+ const body=credentials.extend({full_name:z.string().trim().min(1).max(120),country:z.string().max(4).optional(),phone:z.string().max(30).optional(),referral_code:z.string().trim().min(3).max(32).regex(/^[A-Za-z0-9_-]+$/),agreed:z.literal(true)}).strict().safeParse(req.body);
+ if(!body.success)return res.status(400).json({error:'Enter a valid referral code and check your details, password length and terms acceptance.'});
  const {email,password,...metadata}=body.data;
  if(!admin)return res.status(503).json({error:'Account service is not configured.'});
  if(metadata.referral_code?.trim()){

@@ -25,15 +25,20 @@ export async function cancelWithdrawal(req,res){
 }
 export async function getReferrals(req,res){
  const page=Number(req.query.page??1);if(!Number.isSafeInteger(page)||page<1||page>100000)return res.status(400).json({error:'Invalid page.'});
+ const referralPage=Number(req.query.referral_page??1);if(!Number.isSafeInteger(referralPage)||referralPage<1||referralPage>100000)return res.status(400).json({error:'Invalid referral page.'});
  const [partner,settings,referrals,commissions,pending]=await Promise.all([
   admin.from('influencers').select('id,code,enabled,rate,available_kes,earned_kes').eq('id',req.user.id).maybeSingle(),
   admin.from('referral_settings').select('enabled,rate,first_deposit_only,min_withdrawal').eq('id',true).single(),
-  admin.from('referrals').select('id',{count:'exact',head:true}).eq('user_id',req.user.id),
+  admin.from('referrals').select('id,referred_user_id,code,created_at',{count:'exact'}).eq('user_id',req.user.id).order('created_at',{ascending:false}).order('id',{ascending:false}).range((referralPage-1)*25,referralPage*25-1),
   admin.from('referral_commissions').select('id,deposit_amount,rate,amount,currency,created_at',{count:'exact'}).eq('user_id',req.user.id).order('created_at',{ascending:false}).order('id',{ascending:false}).range((page-1)*25,page*25-1),
   admin.rpc('pending_commission_withdrawals',{p_user:req.user.id})
  ]);
  if([partner,settings,referrals,commissions,pending].some(item=>item.error))return res.status(503).json({error:'Referral service is unavailable. Check Firebase connectivity.'});
- res.json({influencer:partner.data,settings:settings.data,referred_count:referrals.count,commissions:commissions.data,total:commissions.count,page,pending_kes:pending.data});
+ const signups=await Promise.all((referrals.data||[]).map(async row=>{
+  const profile=await admin.from('profiles').select('full_name').eq('id',row.referred_user_id).maybeSingle();
+  return {...row,full_name:profile.data?.full_name||'Member'};
+ }));
+ res.json({influencer:partner.data,settings:settings.data,referred_count:referrals.count,referrals:signups,referral_page:referralPage,commissions:commissions.data,total:commissions.count,page,pending_kes:pending.data});
 }
 export async function getFinanceSettings(_req,res){
  const {data,error}=await admin.from('referral_settings').select('*').eq('id',true).single();
