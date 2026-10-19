@@ -1,4 +1,4 @@
-import {admin} from '../config/supabase.js';
+import {admin} from '../config/database.js';
 export async function getWallets(req,res){
  const [catalog,profile,wallets]=await Promise.all([
   admin.from('currencies').select('code,name,decimals,kind').order('code'),

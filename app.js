@@ -1,4 +1,5 @@
 import express from 'express';
+import {adminRoutes} from './routes/adminRoutes.js';
 import {security,apiLimiter} from './middlewares/security.js';
 import {errorHandler,notFound} from './middlewares/errors.js';
 import {authRoutes} from './routes/authRoutes.js';
@@ -6,6 +7,7 @@ import {accountRoutes} from './routes/accountRoutes.js';
 import {paymentRoutes} from './routes/paymentRoutes.js';
 export const app=express();security(app);
 app.use(express.json({limit:'32kb',strict:true}));app.use('/api',apiLimiter);
-app.get('/api/health',(_req,res)=>res.json({ok:true,service:'swifttrade-api'}));
+app.get(['/healthcheck','/api/health'],(_req,res)=>res.json({ok:true,service:'swifttrade-api'}));
 app.use('/api/auth',authRoutes);app.use('/api/payments',paymentRoutes);app.use('/api',accountRoutes);
+app.use('/api/admin',adminRoutes);
 app.use(notFound);app.use(errorHandler);

@@ -6,3 +6,6 @@ node_modules/
 archive/
 .repository/
 scripts/github-account.mjs
+
+# Server credentials; never commit or serve these files.
+*firebase-adminsdk*.json

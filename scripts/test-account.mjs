@@ -1,5 +1,5 @@
-﻿import {chromium} from '../../frontend/node_modules/playwright/index.mjs';
-import {admin} from '../config/supabase.js';
+import {chromium} from '../../frontend/node_modules/playwright/index.mjs';
+import {admin} from '../config/database.js';
 import {randomBytes} from 'node:crypto';
 const stamp=Date.now(),email='swifttrade.qa.'+stamp+'@example.com',password=randomBytes(24).toString('base64url')+'aA1!';
 let userId,browser;
@@ -12,7 +12,7 @@ try{
  const consoleErrors=[],network=[];
  page.on('pageerror',error=>consoleErrors.push(error.message));
  page.on('response',response=>{const url=new URL(response.url());if(url.pathname.startsWith('/api/'))network.push({path:url.pathname,status:response.status()});});
- const direct=[];page.on('request',request=>{if(new URL(request.url()).hostname.endsWith('.supabase.co'))direct.push(request.url());});
+ const direct=[];page.on('request',request=>{if(new URL(request.url()).hostname.endsWith('.googleapis.com'))direct.push(request.url());});
  await page.goto('http://localhost:5173/login',{waitUntil:'domcontentloaded',timeout:60000});
  await page.getByPlaceholder('you@example.com').fill(email);await page.getByPlaceholder('Your password').fill(password);
  await page.getByRole('button',{name:'Sign in',exact:true}).click();
@@ -47,7 +47,7 @@ try{
  if(walletResult.first!==200||walletResult.second!==200||walletResult.invalid!==400||walletResult.list.wallets.filter(w=>w.currency==='USD').length!==1)throw new Error('Currency wallet validation/idempotency failed');
  console.log('Currency wallet creation, duplicate safety and validation: PASS');
  const profile=await page.evaluate(async()=>{const response=await fetch('/api/me');return {status:response.status,body:await response.json()};});
- console.log('Profile API:',profile.status===200?'PASS':'BLOCKED â€” apply backend/supabase/SETUP.sql');
+ console.log('Profile API:',profile.status===200?'PASS':'BLOCKED â€” run npm run firebase:init');
  if(direct.length)throw new Error('Browser called the database directly.');
  if(profile.status===200){
   for(const width of [1440,1024,768,390,320]){
