@@ -4,7 +4,7 @@ export const currencies=[
 {code:'BTC',name:'Bitcoin'},{code:'ETH',name:'Ethereum'},{code:'USDT',name:'Tether'}];
 export function paymentMethods(){
 return [
-{id:'mpesa',name:'M-Pesa',currencies:['KES'],enabled:!!(process.env.MPESA_STK_SERVICE_URL&&process.env.PAYMENTS_SERVICE_TOKEN?.length>=32)},
+{id:'mpesa',name:'M-Pesa',currencies:['KES'],enabled:!!(process.env.MPESA_STK_SERVICE_URL&&process.env.MPESA_SHORTCODE&&process.env.PAYMENTS_SERVICE_TOKEN?.length>=32)},
 {id:'card',name:'Visa / Mastercard',currencies:['KES','USD','EUR','GBP','NGN','ZAR'],enabled:false},
 {id:'crypto',name:'Cryptocurrency',currencies:['BTC','ETH','USDT'],enabled:false},
 {id:'bank',name:'Bank transfer',currencies:['KES','USD','EUR','GBP','UGX','TZS','NGN','ZAR'],enabled:false},

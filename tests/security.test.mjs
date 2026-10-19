@@ -34,3 +34,9 @@ test('HTTP protections and cross-origin rejection',async()=>{
  res=await fetch(base+'/api/payments/methods');assert.equal(res.status,200);
  }finally{await new Promise(resolve=>server.close(resolve));}
 });
+
+test('M-Pesa is unavailable without a merchant shortcode',()=>{
+ const keys=['MPESA_STK_SERVICE_URL','PAYMENTS_SERVICE_TOKEN','MPESA_SHORTCODE'];const saved=Object.fromEntries(keys.map(key=>[key,process.env[key]]));
+ try{process.env.MPESA_STK_SERVICE_URL='https://payments.example.com';process.env.PAYMENTS_SERVICE_TOKEN='x'.repeat(32);process.env.MPESA_SHORTCODE='';assert.equal(paymentMethods().find(item=>item.id==='mpesa').enabled,false);process.env.MPESA_SHORTCODE='123456';assert.equal(paymentMethods().find(item=>item.id==='mpesa').enabled,true);}
+ finally{for(const key of keys){if(saved[key]===undefined)delete process.env[key];else process.env[key]=saved[key];}}
+});
